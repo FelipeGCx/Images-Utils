@@ -35,8 +35,30 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Run the app
+### Run the app helper
 
 ```bash
-python3 src/app.py
+python3 src/app.py -h
+```
+
+![image with use options](/readme/first.png)
+
+- use the modes starting with 2 to infer the image file format, if you only need to convert a specific format use the other modes such as p2w (png to wepb)
+
+### Example to parsing one image from png to webp
+
+```bash
+python3 src/app.py -m="p2w" /home/user/pictures/img-01.png /home/user/pictures/
+```
+
+### Example to parsing images from a folder from any format to webp
+
+```bash
+python3 src/app.py -m="2webp" /home/user/pictures/ /home/user/pictures/
+```
+
+### Example to parsing images from a folder from jpg to png, excluiding rest images formats
+
+```bash
+python3 src/app.py -m="2png" /home/user/pictures/ /home/user/pictures/pngs
 ```

@@ -6,6 +6,8 @@
 
 - if you can contribuite with a new endpoints or logic, send a pull request.
 - if you like this repo and it's usefull for your, give me a start 🌟
+- ## Added handler to  save parsed images in the same folder, use "."
+- ## Added compatibility to relatives paths
 
 ---
 

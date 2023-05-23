@@ -22,7 +22,9 @@ class App():
         format = self.get_format(config["mode"])
         og_format = self.get_original_format(config["mode"])
         if os.path.isfile(config["src"]):
-            if og_format in config["src"]:
+            config["dest"] = os.path.abspath(self.get_dest(config))
+            config["src"] = os.path.abspath(config["src"])
+            if og_format in config["src"] or og_format == "all":
                 self.parse_image(config["src"], config["dest"], format)
             else:
                 print("Error: Entry Image Format Invalid")
@@ -31,6 +33,11 @@ class App():
             self.convert_images(
                 config["src"], config["dest"], format, og_format)
         print("Parse Completed Succesfully")
+        
+    def get_dest(self,config):
+        if config["dest"] == ".":
+            return os.path.dirname(config["src"])
+        return config["dest"]
 
     def get_format(self, mode):
         if mode == "2webp" or mode == "p2w" or mode == "j2w":
@@ -53,7 +60,7 @@ class App():
     def convert_images(self, src, dest, format, og_format):
         files = os.listdir(src)
         for file in files:
-            filepath = f"{src}/{file}"
+            filepath = os.path.join(src,file)
             if os.path.isfile(filepath):
                 if og_format in filepath or og_format == "all":
                     self.parse_image(filepath, dest, format)
@@ -72,12 +79,13 @@ class App():
         return (filename.endswith(".jpg") or filename.endswith(
             ".png") or filename.endswith(".webp") or filename.endswith(".jpeg"))
 
-    def create_name(self, filename, dest, format):
-        name, ext = os.path.splitext(filename)
-        name = name.split("/")[-1]
-        if os.path.exists(f"{dest}/{name}.{format}"):
+    def create_name(self, fullpath, dest, format):
+        filename = os.path.basename(fullpath)
+        name,ext = os.path.splitext(filename)
+        new_dest = os.path.join(dest, f"{name}.{format}")
+        if os.path.exists(new_dest):
             name = f"{name}-{datetime.datetime.now()}"
-        return f"{dest}/{name}.{format}"
+        return os.path.join(dest, f"{name}.{format}")
 
     def open_image(self, filename):
         return Image.open(filename)

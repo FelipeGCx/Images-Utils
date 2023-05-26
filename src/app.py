@@ -1,4 +1,5 @@
 import datetime
+import math
 import os
 from PIL import Image
 import argparse
@@ -10,7 +11,10 @@ class App():
         parser = argparse.ArgumentParser(description="Guide to use images utils",
                                          formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         parser.add_argument(
-            "-m", "--mode", help="select mode to parse", choices=["2png","2webp", "2jpg", "p2w", "p2j", "w2p", "w2j", "j2p", "j2w"], default="p2w")
+            "-m", "--mode", help="select mode to parse", choices=["2png", "2webp", "2jpg", "p2w", "p2j", "w2p", "w2j", "j2p", "j2w"], default="p2w")
+        parser.add_argument("-q", "--quality", type=int, choices=range(0, 101),
+                            metavar="[0-100]",
+                            help='select quality output (0-100)', default=100)
         parser.add_argument("src", help="Source location")
         parser.add_argument("dest", help="Destination location")
         args = parser.parse_args()
@@ -24,17 +28,20 @@ class App():
         if os.path.isfile(config["src"]):
             config["dest"] = os.path.abspath(self.get_dest(config))
             config["src"] = os.path.abspath(config["src"])
+            # setting the min quality value to fit scale 20-100 and avoid excesive compress quality
+            config["quality"] = math.floor(((config["quality"] - 0) / (100 - 0)) * (100 - 20) + 20)
             if og_format in config["src"] or og_format == "all":
-                self.parse_image(config["src"], config["dest"], format)
+                self.parse_image(
+                    config["src"], config["dest"], format, config["quality"])
             else:
                 print("Error: Entry Image Format Invalid")
                 os._exit(0)
         else:
             self.convert_images(
-                config["src"], config["dest"], format, og_format)
+                config["src"], config["dest"], format, og_format, config["quality"])
         print("Parse Completed Succesfully")
-        
-    def get_dest(self,config):
+
+    def get_dest(self, config):
         if config["dest"] == ".":
             return os.path.dirname(config["src"])
         return config["dest"]
@@ -57,23 +64,23 @@ class App():
         else:
             return "all"
 
-    def convert_images(self, src, dest, format, og_format):
+    def convert_images(self, src, dest, format, og_format, quality):
         files = os.listdir(src)
         for file in files:
-            filepath = os.path.join(src,file)
+            filepath = os.path.join(src, file)
             if os.path.isfile(filepath):
                 if og_format in filepath or og_format == "all":
-                    self.parse_image(filepath, dest, format)
+                    self.parse_image(filepath, dest, format, quality)
 
-    def parse_image(self, filename, dest, format):
+    def parse_image(self, filename, dest, format, quality):
         if self.is_image(filename):
             if not os.path.exists(dest):
                 os.makedirs(dest)
             name = self.create_name(filename, dest, format)
             image = self.open_image(filename)
             if format == "jpg":
-                image = image.convert("RGB")
-            self.save_image(image, name)
+                image = image.convert("RGBX")
+            self.save_image(image, name, quality)
 
     def is_image(self, filename):
         return (filename.endswith(".jpg") or filename.endswith(
@@ -81,7 +88,7 @@ class App():
 
     def create_name(self, fullpath, dest, format):
         filename = os.path.basename(fullpath)
-        name,ext = os.path.splitext(filename)
+        name, ext = os.path.splitext(filename)
         new_dest = os.path.join(dest, f"{name}.{format}")
         if os.path.exists(new_dest):
             name = f"{name}-{datetime.datetime.now()}"
@@ -90,8 +97,8 @@ class App():
     def open_image(self, filename):
         return Image.open(filename)
 
-    def save_image(self, image, filename):
-        image.save(filename)
+    def save_image(self, image, filename, quality):
+        image.save(filename, quality=quality, optimize=True)
         image.close()
 
 

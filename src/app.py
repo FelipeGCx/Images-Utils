@@ -95,7 +95,18 @@ class App():
         return os.path.join(dest, f"{name}.{format}")
 
     def open_image(self, filename):
-        return Image.open(filename)
+        try:
+            return Image.open(filename)
+        except (TypeError, FileNotFoundError, OSError) as e:
+            if(e.__class__.__name__ == "TypeError"):
+                print("Error: File type not supported")
+            elif(e.__class__.__name__ == "FileNotFoundError"):
+                print("Error: File not found")
+            elif(e.__class__.__name__ == "UnidentifiedImageError"):
+                print("Error: Can not identify image file")
+            else:
+                print("Error: Something went wrong")
+            os._exit(0)
 
     def save_image(self, image, filename, quality):
         image.save(filename, quality=quality, optimize=True)

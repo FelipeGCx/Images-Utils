@@ -25,9 +25,9 @@ class App():
         print("Parsing ...")
         format = self.get_format(config["mode"])
         og_format = self.get_original_format(config["mode"])
+        config["dest"] = os.path.abspath(self.get_dest(config))
+        config["src"] = os.path.abspath(config["src"])
         if os.path.isfile(config["src"]):
-            config["dest"] = os.path.abspath(self.get_dest(config))
-            config["src"] = os.path.abspath(config["src"])
             # setting the min quality value to fit scale 20-100 and avoid excesive compress quality
             config["quality"] = math.floor(((config["quality"] - 0) / (100 - 0)) * (100 - 20) + 20)
             if og_format in config["src"] or og_format == "all":

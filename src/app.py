@@ -15,37 +15,31 @@ class App():
         parser.add_argument("-q", "--quality", type=int, choices=range(0, 101),
                             metavar="[0-100]",
                             help='select quality output (0-100)', default=100)
+        parser.add_argument("-hs", "--height", type=int, choices=range(0, 8001), metavar="[0-8000]",
+                   help='select height output (0-8000) 0 is auto', default=0)
+
+        parser.add_argument("-ws", "--width", type=int, choices=range(1, 8001), metavar="[0-8000]",
+                   help='select width output (0-8000) 0 is auto', default=0)
+
+        parser.add_argument("-t", "--thumbnail",action="store_true", default=False, help="conserve proportions")
         parser.add_argument("src", help="Source location")
         parser.add_argument("dest", help="Destination location")
         args = parser.parse_args()
+        if (args.thumbnail and not args.width) and (args.thumbnail and not args.height):
+            parser.error("El argumento -t no se puede usar sin -hs o -ws")
         config = vars(args)
-        self.start_parsing(config)
-
-    def start_parsing(self, config):
-        print("Parsing ...")
-        format = self.get_format(config["mode"])
-        og_format = self.get_original_format(config["mode"])
-        config["dest"] = os.path.abspath(self.get_dest(config))
-        config["src"] = os.path.abspath(config["src"])
-        if os.path.isfile(config["src"]):
-            # setting the min quality value to fit scale 20-100 and avoid excesive compress quality
-            config["quality"] = math.floor(((config["quality"] - 0) / (100 - 0)) * (100 - 20) + 20)
-            if og_format in config["src"] or og_format == "all":
-                self.parse_image(
-                    config["src"], config["dest"], format, config["quality"])
-            else:
-                print("Error: Entry Image Format Invalid")
-                os._exit(0)
-        else:
-            self.convert_images(
-                config["src"], config["dest"], format, og_format, config["quality"])
-        print("Parse Completed Succesfully")
-
-    def get_dest(self, config):
-        if config["dest"] == ".":
-            return os.path.dirname(config["src"])
-        return config["dest"]
-
+        self.mode = config["mode"]
+        self.format = self.get_format(config["mode"])
+        self.og_format = self.get_original_format(config["mode"])
+        self.mode = self.get_format(config["mode"])
+        self.src = os.path.abspath(config["src"])
+        self.dest = os.path.abspath(self.get_dest(config))
+        self.width = config["width"]
+        self.height = config["height"]
+        self.thumb = config["thumbnail"]
+        self.quality = math.floor(((config["quality"] - 0) / (100 - 0)) * (100 - 20) + 20)
+        self.start_parsing()
+        
     def get_format(self, mode):
         if mode == "2webp" or mode == "p2w" or mode == "j2w":
             return "webp"
@@ -53,7 +47,7 @@ class App():
             return "png"
         elif mode == "2jpg" or mode == "p2j" or mode == "w2j":
             return "jpg"
-
+    
     def get_original_format(self, mode):
         if mode == "w2p" or mode == "w2j":
             return "webp"
@@ -64,23 +58,61 @@ class App():
         else:
             return "all"
 
-    def convert_images(self, src, dest, format, og_format, quality):
-        files = os.listdir(src)
-        for file in files:
-            filepath = os.path.join(src, file)
-            if os.path.isfile(filepath):
-                if og_format in filepath or og_format == "all":
-                    self.parse_image(filepath, dest, format, quality)
+    def get_dest(self, config):
+        if config["dest"] == ".":
+            if os.path.isdir(config["src"]):
+                return config["src"]
+            else:
+                folder, _ = os.path.split(config["src"])
+                return folder
+        else:
+            if os.path.isdir(config["dest"]):
+                return config["dest"]
+            else:
+                folder, _ = os.path.split(config["dest"])
+                return folder
 
-    def parse_image(self, filename, dest, format, quality):
+    def start_parsing(self):
+        print("Parsing ...")
+        if os.path.isfile(self.src):
+            if self.og_format in self.src or self.og_format == "all":
+                self.parse_image(self.src)
+            else:
+                print("Error: Entry Image Format Invalid")
+                os._exit(0)
+        else:
+            self.convert_images()
+        print("Parse Completed Succesfully")
+
+    def parse_image(self, filename):
         if self.is_image(filename):
-            if not os.path.exists(dest):
-                os.makedirs(dest)
-            name = self.create_name(filename, dest, format)
+            if not os.path.exists(self.dest):
+                os.makedirs(self.dest)
+            name = self.create_name(filename, self.dest, self.format)
             image = self.open_image(filename)
-            if format == "jpg":
+            image = self.resize_image(image)
+            if self.format == "jpg":
                 image = image.convert("RGBX")
-            self.save_image(image, name, quality)
+            self.save_image(image, name, self.quality)
+            
+    def resize_image(self, image):
+        ws, hs = image.size
+        nw =  self.height if self.width == 0 else self.width 
+        nh =  self.width if self.height == 0 else self.height
+        size = (nw, nh)
+        if self.thumb:
+            size = (size[0],int(hs * size[0] / ws)) if ws > hs else (int(ws * size[0] / hs),size[0])
+        if self.width > 0 or self.height > 0:
+            image = image.resize(size)
+        return image
+
+    def convert_images(self):
+        files = os.listdir(self.src)
+        for file in files:
+            filepath = os.path.join(self.src, file)
+            if os.path.isfile(filepath):
+                if self.og_format in filepath or self.og_format == "all":
+                    self.parse_image(filepath)
 
     def is_image(self, filename):
         return (filename.endswith(".jpg") or filename.endswith(

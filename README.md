@@ -8,9 +8,11 @@
 
 - if you can contribuite with a new logic, send a pull request.
 - if you like this repo and it's usefull for your, give me a start 🌟
-- ## Added handler to  save parsed images in the same folder, use "."
-- ## Added compatibility to relatives paths
-- ## Added quality mode to compress images use -q=""
+-  Added handler to  save parsed images in the same folder, use "."
+-  Added compatibility to relatives paths
+-  Added quality mode to compress images use -q=""
+- ## Added resize mode to resize images use -ws="" and -hs="" 
+- ## Added thumbnail mode to conserve aspect images use -t=""
 
 ---
 
@@ -73,3 +75,17 @@ python3 src/app.py -m="2png" /home/user/pictures/ /home/user/pictures/pngs
 ```bash
 python3 src/app.py -m="2webp" -q="50" /home/user/pictures/ . 
 ```
+
+### Example to parsing images from a folder from jpg and resize 
+
+```bash
+python3 src/app.py -m="2jpg" -ws="1000" /home/user/pictures/ . 
+```
+*in this case the output image is 1000x1000 
+
+### Example to parsing images from a folder from jpg and resize and conserve aspect
+
+```bash
+python3 src/app.py -m="2jpg" -ws="1000" -t /home/user/pictures/ . 
+```
+*in this case the output image conserve aspect ratio

@@ -32,10 +32,15 @@ pip install virtualenv
 virtualenv venv -p python3
 ```
 
-### Init your virtual enviroment
+### Init your virtual enviroment 
 
+#### Linux
 ```bash
 source venv/bin/activate
+```
+#### Windows
+```bash
+.\venv\Scripts\activate
 ```
 
 ### Install the requirement.txt

@@ -3,6 +3,7 @@ import math
 import os
 from PIL import Image
 import argparse
+import pillow_avif
 
 
 class App():
@@ -11,7 +12,7 @@ class App():
         parser = argparse.ArgumentParser(description="Guide to use images utils",
                                          formatter_class=argparse.ArgumentDefaultsHelpFormatter)
         parser.add_argument(
-            "-m", "--mode", help="select mode to parse", choices=["2png", "2webp", "2jpg", "p2w", "p2j", "w2p", "w2j", "j2p", "j2w"], default="p2w")
+            "-m", "--mode", help="select mode to parse", choices=["2png", "2webp", "2jpg", "p2w", "p2j" ,"p2a", "w2p", "w2j","w2a", "j2p", "j2w","j2a", "a2p", "a2w", "a2j"], default="p2w")
         parser.add_argument("-q", "--quality", type=int, choices=range(0, 101),
                             metavar="[0-100]",
                             help='select quality output (0-100)', default=100)
@@ -41,19 +42,23 @@ class App():
         self.start_parsing()
         
     def get_format(self, mode):
-        if mode == "2webp" or mode == "p2w" or mode == "j2w":
+        if mode == "2webp" or mode == "p2w" or mode == "j2w" or mode == "a2w":
             return "webp"
-        elif mode == "2png" or mode == "w2p" or mode == "j2p":
+        elif mode == "2avif" or mode == "w2a" or mode == "j2a" or mode == "p2a":
+            return "avif"
+        elif mode == "2png" or mode == "w2p" or mode == "j2p" or mode == "a2p":
             return "png"
-        elif mode == "2jpg" or mode == "p2j" or mode == "w2j":
+        elif mode == "2jpg" or mode == "p2j" or mode == "w2j" or mode == "a2j":
             return "jpg"
     
     def get_original_format(self, mode):
-        if mode == "w2p" or mode == "w2j":
+        if mode == "a2w" or mode == "a2p" or mode == "a2j":
+            return "avif"
+        elif mode == "w2p" or mode == "w2j" or mode == "w2a":
             return "webp"
-        elif mode == "p2w" or mode == "p2j":
+        elif mode == "p2w" or mode == "p2j" or mode == "p2a":
             return "png"
-        elif mode == "j2p" or mode == "j2w":
+        elif mode == "j2p" or mode == "j2w" or mode == "j2a":
             return "jpg"
         else:
             return "all"
@@ -116,14 +121,14 @@ class App():
 
     def is_image(self, filename):
         return (filename.endswith(".jpg") or filename.endswith(
-            ".png") or filename.endswith(".webp") or filename.endswith(".jpeg"))
+            ".png") or filename.endswith(".webp") or filename.endswith(".jpeg") or filename.endswith(".avif"))
 
     def create_name(self, fullpath, dest, format):
         filename = os.path.basename(fullpath)
         name, ext = os.path.splitext(filename)
         new_dest = os.path.join(dest, f"{name}.{format}")
         if os.path.exists(new_dest):
-            name = f"{name}-{datetime.datetime.now()}"
+            name = f"{name}-{datetime.datetime.now().strftime('%a%d%b%Y,%I:%M%p')}"
         return os.path.join(dest, f"{name}.{format}")
 
     def open_image(self, filename):
